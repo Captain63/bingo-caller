@@ -5,6 +5,7 @@ const next = document.querySelector("#next");
 const clear = document.querySelector("#clear");
 const currentNumber = document.querySelector("#current-number");
 const pastNumbersList = document.querySelector("#past-numbers");
+const finishedMessage = document.querySelector("#finished-message");
 
 const showButtons = () => {
     start.innerText = "Restart";
@@ -72,6 +73,22 @@ const generateBingoNumbers = () => {
     }
 };
 
+const selectBingoNumber = () => {
+    // Stops generator once all numbers have been called
+    if (bingoNumbers.length === 0) {
+        finishedMessage.classList.remove("hide");
+
+        next.classList.add("hide");
+    } else {
+        // Maximum range of random numbers is 0-74 to align with indexes of bingoNumbers
+        const randomIndex = Math.floor(Math.random() * bingoNumbers.length);
+
+        // Removes 1 number, starting at randomIndex and returns result to display
+        const output = bingoNumbers.splice(randomIndex, 1);
+
+        currentNumber.innerText = output;
+    }
+}
 
 // Declare start + variable capture function
 const startGenerating = () => {
@@ -164,4 +181,8 @@ clear.addEventListener("click", clearValues);
 
 inProgress();
 generateBingoNumbers();
-console.log(bingoNumbers);
+
+for (let i = 0; i < 76; i ++) {
+    selectBingoNumber();
+    console.log(bingoNumbers);
+}
