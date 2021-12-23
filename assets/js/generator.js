@@ -18,8 +18,6 @@ const configureLocalStorage = () => {
 
 const bingoNumbersMaster = [];
 
-let bingoNumbers = [];
-
 const generateBingoNumbers = () => {
     // Populate B1-15 in array
     for (let i = 1; i < 16; i++) {
@@ -68,8 +66,6 @@ const checkFinished = () => {
 
         next.classList.add("hide");
 
-        liArrayLoop(pastNumbersArr);
-
         currentNumber.innerText = JSON.parse(localStorage.getItem("currentNumber"));
 
         return true;
@@ -77,11 +73,6 @@ const checkFinished = () => {
 }
 
 const inProgress = () => {
-    if (checkFinished()) {
-        // Stops execution to avoid displaying Next button
-        return;
-    }
-
     const currentNumberValue = JSON.parse(localStorage.getItem("currentNumber"));
 
     if (currentNumberValue.length !== 0) {
@@ -97,6 +88,8 @@ const inProgress = () => {
 
         liArrayLoop(pastNumbersArr);
     }
+
+    checkFinished();
 }
 
 // Declare generator function
@@ -125,6 +118,8 @@ const selectBingoNumber = () => {
         storePreviousNumber();
     }
 
+    const bingoNumbers = JSON.parse(localStorage.getItem("bingoNumbers"));
+
     // Maximum range of random numbers is 0-74 to align with indexes of bingoNumbers
     const randomIndex = Math.floor(Math.random() * bingoNumbers.length);
 
@@ -134,12 +129,14 @@ const selectBingoNumber = () => {
     currentNumber.innerText = output;
 
     localStorage.setItem("currentNumber", JSON.stringify(output));
+
+    localStorage.setItem("bingoNumbers", JSON.stringify(bingoNumbers));
 }
 
 // Declare start + variable capture function
 const startGenerating = () => {
-    // Each time sequence is restarted, bingoNumbers array is overwritten with master values
-    bingoNumbers = [...bingoNumbersMaster];
+    // Each time sequence is restarted, bingoNumbers array is overwritten with master values and persisted in localStorage
+    localStorage.setItem("bingoNumbers", JSON.stringify([...bingoNumbersMaster]));
 
     // Clearing any previous numbers and exposing buttons
     if (currentNumber.innerText) {
