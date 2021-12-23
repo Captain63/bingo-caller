@@ -43,7 +43,34 @@ const inProgress = () => {
     }
 }
 
+const bingoNumbers = [];
 
+const generateBingoNumbers = () => {
+    // Populate B1-15 in array
+    for (let i = 1; i < 16; i++) {
+        bingoNumbers.push(`B${i}`);
+    }
+
+    // Populate I16-30 in array 
+    for (let i = 16; i < 31; i++) {
+        bingoNumbers.push(`I${i}`);
+    }
+
+    // Populate N31-N45 in array 
+    for (let i = 31; i < 46; i++) {
+        bingoNumbers.push(`N${i}`);
+    }
+
+    // Populate G46-60 in array 
+    for (let i = 46; i < 61; i++) {
+        bingoNumbers.push(`G${i}`);
+    }
+
+    // Populate O61-75 in array 
+    for (let i = 61; i < 76; i++) {
+        bingoNumbers.push(`O${i}`);
+    }
+};
 
 
 // Declare start + variable capture function
@@ -136,3 +163,5 @@ next.addEventListener("click", generate);
 clear.addEventListener("click", clearValues);
 
 inProgress();
+generateBingoNumbers();
+console.log(bingoNumbers);
