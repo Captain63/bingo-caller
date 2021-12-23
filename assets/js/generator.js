@@ -5,14 +5,49 @@ const next = document.querySelector("#next");
 const clear = document.querySelector("#clear");
 const currentNumber = document.querySelector("#current-number");
 const pastNumbersList = document.querySelector("#past-numbers");
+const finishedMessage = document.querySelector("#finished-message");
 
-const showButtons = () => {
-    start.innerText = "Restart";
-    
-    next.classList.remove("hide");
+const configureLocalStorage = () => {
+    // If currentNumber doesn't already exist in local storage
+    if (!localStorage.getItem("currentNumber")) {
+        localStorage.setItem("currentNumber", JSON.stringify([]));
+    }
 
-    clear.classList.remove("hide");
+    if (!localStorage.getItem("pastNumbersArr")) {
+        localStorage.setItem("pastNumbersArr", JSON.stringify([]));
+    }
 }
+
+const bingoNumbersMaster = [];
+
+let bingoNumbers = [];
+
+const generateBingoNumbers = () => {
+    // Populate B1-15 in array
+    for (let i = 1; i < 16; i++) {
+        bingoNumbersMaster.push(`B${i}`);
+    }
+
+    // Populate I16-30 in array 
+    for (let i = 16; i < 31; i++) {
+        bingoNumbersMaster.push(`I${i}`);
+    }
+
+    // Populate N31-N45 in array 
+    for (let i = 31; i < 46; i++) {
+        bingoNumbersMaster.push(`N${i}`);
+    }
+
+    // Populate G46-60 in array 
+    for (let i = 46; i < 61; i++) {
+        bingoNumbersMaster.push(`G${i}`);
+    }
+
+    // Populate O61-75 in array 
+    for (let i = 61; i < 76; i++) {
+        bingoNumbersMaster.push(`O${i}`);
+    }
+};
 
 const liArrayLoop = array => {
     array.forEach(item => {
@@ -24,115 +59,132 @@ const liArrayLoop = array => {
     })
 }
 
-// Future features: create function to check if data's already in localStorage to then backfill content (persists if user refreshes by accident)
-const inProgress = () => {
-    const outerLimit = JSON.parse(localStorage.getItem("outerLimit"));
+const checkFinished = () => {
+    const pastNumbersArr = JSON.parse(localStorage.getItem("pastNumbersArr"));
 
-    if (outerLimit) {
-        showButtons();
+    // Stops generator once all numbers have been called
+    if (pastNumbersArr.length === 74) {
+        start.innerText = "Restart";
 
-        input.value = outerLimit;
+        finishedMessage.classList.remove("hide");
+
+        next.classList.add("hide");
+
+        liArrayLoop(pastNumbersArr);
 
         currentNumber.innerText = JSON.parse(localStorage.getItem("currentNumber"));
+
+        return true;
+    }
+}
+
+const inProgress = () => {
+    if (checkFinished()) {
+        // Stops execution to avoid displaying Next button
+        return;
+    }
+
+    const currentNumberValue = JSON.parse(localStorage.getItem("currentNumber"));
+
+    if (currentNumberValue.length !== 0) {
+        start.innerText = "Restart";
+    
+        next.classList.remove("hide");
+
+        currentNumber.innerText = currentNumberValue;
 
         const pastNumbersArr = JSON.parse(localStorage.getItem("pastNumbersArr"));
 
         pastNumbersList.innerHTML = "";
 
         liArrayLoop(pastNumbersArr);
-    }
-}
-
-
-
-
-// Declare start + variable capture function
-const startGenerating = () => {
-    const outerLimit = parseInt(input.value);
-
-    if (!outerLimit) {
-        alert("Please enter a number in the text box")
-    } else {
-        // Clearing any previous numbers and exposing buttons
-        if (currentNumber.innerText) {
-            // Clears any existing values from previous calls
-            currentNumber.innerText = "";
-        }
-
-        if (pastNumbersList.innerHTML) {
-            // Clear bullet points for new numbers
-            pastNumbersList.innerHTML = "";
-        }
-
-        if (start.innerText === "Start") {
-            start.innerText = "Restart";
-        }
-
-        if (next.classList.contains("hide")) {
-            next.classList.remove("hide");
-        }
-
-        if (clear.classList.contains("hide")) {
-            clear.classList.remove("hide");
-        }
-
-        // Creates new empty past numbers array
-        const pastNumbersArr = [];
-        
-        // Adds empty array to localStorage
-        localStorage.setItem("pastNumbersArr", JSON.stringify(pastNumbersArr));
-
-        // Store outerLimit in localStorage
-        localStorage.setItem("outerLimit", JSON.stringify(outerLimit));
-
-        // Call generator
-        generate();
     }
 }
 
 // Declare generator function
-const generate = () => {
-    // Pull outerLimit from localStorage
-    const outerLimit = JSON.parse(localStorage.getItem("outerLimit"));
+const storePreviousNumber = () => {
+    const pastNumbersArr = JSON.parse(localStorage.getItem("pastNumbersArr"));
 
-    // Persist values in localStorage
-    if (currentNumber.innerText) {
-        const pastNumbersArr = JSON.parse(localStorage.getItem("pastNumbersArr"));
+    // Store past number in front of list so bullet points display newest number FIRST
+    pastNumbersArr.unshift(currentNumber.innerText);
 
-        // Store past number in front of list so bullet points display newest number FIRST
-        pastNumbersArr.unshift(currentNumber.innerText);
+    pastNumbersList.innerHTML = "";
 
-        pastNumbersList.innerHTML = "";
+    // Loop through array to create bullet points
+    liArrayLoop(pastNumbersArr);
 
-        // Loop through array to create bullet points
-        liArrayLoop(pastNumbersArr);
+    localStorage.setItem("pastNumbersArr", JSON.stringify(pastNumbersArr));
+}
 
-        localStorage.setItem("pastNumbersArr", JSON.stringify(pastNumbersArr));
+const selectBingoNumber = () => {
+    if (checkFinished()) {
+        // Stops execution to avoid displaying Next button
+        return;
     }
 
-    // Add 1 to ensure lowest value will always be 1, not 0
-    const output = Math.floor(Math.random() * outerLimit) + 1;
+    // Stores previous number in localStorage before it's overwritten
+    if (currentNumber.innerText) {
+        storePreviousNumber();
+    }
+
+    // Maximum range of random numbers is 0-74 to align with indexes of bingoNumbers
+    const randomIndex = Math.floor(Math.random() * bingoNumbers.length);
+
+    // Removes 1 number, starting at randomIndex and returns result to display
+    const output = bingoNumbers.splice(randomIndex, 1);
 
     currentNumber.innerText = output;
 
     localStorage.setItem("currentNumber", JSON.stringify(output));
 }
 
-// Clears existing values from input field and displays and hides buttons
-const clearValues = () => {
-    input.value = "";
-    currentNumber.innerText = "";
-    pastNumbersList.innerHTML = "";
-    start.innerText = "Start";
-    next.classList.add("hide");
-    clear.classList.add("hide");
+// Declare start + variable capture function
+const startGenerating = () => {
+    // Each time sequence is restarted, bingoNumbers array is overwritten with master values
+    bingoNumbers = [...bingoNumbersMaster];
 
-    // Clear local storage values so they don't perpetuate between sessions
-    localStorage.clear();
+    // Clearing any previous numbers and exposing buttons
+    if (currentNumber.innerText) {
+        // Clears any existing values from previous calls
+        currentNumber.innerText = "";
+    }
+
+    if (pastNumbersList.innerHTML) {
+        // Clear bullet points for new numbers
+        pastNumbersList.innerHTML = "";
+    }
+
+    if (start.innerText === "Start") {
+        start.innerText = "Restart";
+    }
+
+    if (next.classList.contains("hide")) {
+        next.classList.remove("hide");
+    }
+
+    finishedMessage.classList.add("hide");
+
+    // Creates new empty past numbers array
+    const pastNumbersArr = [];
+        
+    // Adds empty array to localStorage
+    localStorage.setItem("pastNumbersArr", JSON.stringify(pastNumbersArr));
+
+    // Call generator
+    selectBingoNumber();
 }
 
 start.addEventListener("click", startGenerating);
-next.addEventListener("click", generate);
-clear.addEventListener("click", clearValues);
+next.addEventListener("click", selectBingoNumber);
 
+configureLocalStorage();
+generateBingoNumbers();
 inProgress();
+
+// Automated testing suite
+// startGenerating();
+
+// for (let i = 0; i < 76; i++) {
+//     selectBingoNumber();
+//     console.log(i);
+// }
